@@ -1,0 +1,16 @@
+# # UserParcelTemplateCreateRequest
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**template** | **string** | The object representing the carrier parcel template | [optional]
+**weight** | **string** | The weight of the package, in units specified by the weight_unit attribute. | [optional]
+**weight_unit** | [**\OpenAPI\Client\Model\WeightUnitEnum**](WeightUnitEnum.md) |  | [optional]
+**distance_unit** | [**\OpenAPI\Client\Model\DistanceUnitEnum**](DistanceUnitEnum.md) | The measure unit used for length, width and height. Required, but if using a preset carrier template then this field must be empty. |
+**height** | **string** | The height of the package, in units specified by the &#x60;distance_unit&#x60; attribute. Required, but if using a preset carrier template then this field must be empty. |
+**length** | **string** | The length of the package, in units specified by the &#x60;distance_unit&#x60; attribute. Required, but if using a preset carrier template then this field must be empty. |
+**name** | **string** | The name of the User Parcel Template |
+**width** | **string** | The width of the package, in units specified by the &#x60;distance_unit&#x60; attribute. Required, but if using a preset carrier template then this field must be empty. |
+
+[[Back to Model list]](../../README.md#models) [[Back to API list]](../../README.md#endpoints) [[Back to README]](../../README.md)
