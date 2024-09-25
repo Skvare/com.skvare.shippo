@@ -1,9 +1,18 @@
 <?php
 
 use GuzzleHttp\Client;
-use OpenAPI\Client\Api\AddressesApi;
 use OpenAPI\Client\Configuration;
 use OpenAPI\Client\Model\AddressCreateRequest;
+use OpenAPI\Client\Model\CreateTransactionRequest;
+use OpenAPI\Client\Model\CustomsDeclaration;
+use OpenAPI\Client\Model\CustomsDeclarationCreateRequest;
+use OpenAPI\Client\Model\RefundRequestBody;
+use OpenAPI\Client\Model\Shipment;
+use OpenAPI\Client\Model\ShipmentCreateRequest;
+use OpenAPI\Client\Model\ShipmentCreateRequestAllOfAddressFrom;
+use OpenAPI\Client\Model\ShipmentCreateRequestAllOfAddressTo;
+use OpenAPI\Client\Model\ShipmentCreateRequestAllOfParcels;
+use OpenAPI\Client\Model\Transaction;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -159,6 +168,170 @@ class CRM_Shippo_Connect {
       echo 'Exception when calling AddressesApi->getAddress: ', $e->getMessage(), PHP_EOL;
     }
     return [];
+  }
+
+  /**
+   * Declarations Request.
+   *
+   * @param array $params
+   *   Declarations details.
+   *
+   * @return false|array|CustomsDeclaration
+   *   Mixed.
+   */
+  public static function declarations(array $params): array|bool|CustomsDeclaration {
+    $result = FALSE;
+    try {
+      /** @var  OpenAPI\Client\Api\CustomsDeclarationsApi $apiInstance */
+      $apiInstance = CRM_Shippo_Connect::shippo('CustomsDeclarationsApi');
+      $customsDeclarationRequest = new CustomsDeclarationCreateRequest();
+      $customsDeclarationRequest->setContentsType($params['contents_type']);
+      $customsDeclarationRequest->setContentsExplanation($params['contents_explanation']);
+      $customsDeclarationRequest->setNonDeliveryOption($params['non_delivery_option']);
+      $customsDeclarationRequest->setCertify($params['certify']);
+      $customsDeclarationRequest->setCertifySigner($params['certify_signer']);
+      $customsDeclarationRequest->setItems($params['items']);
+      $result = $apiInstance->createCustomsDeclaration($customsDeclarationRequest, self::API_VERSION);
+    }
+    catch (Exception $e) {
+      echo 'Exception when calling CustomsDeclarationsApi: ', $e->getMessage(), PHP_EOL;
+    }
+    return $result;
+  }
+
+  /**
+   * Create Shipment.
+   *
+   * @param array $params
+   *   Shipment details.
+   *
+   * @return false|array|Shipment
+   *   Mixed return.
+   */
+  public static function shipment(array $params): bool|Shipment|array {
+    /** @var  OpenAPI\Client\Api\ShipmentsApi $apiInstance */
+    $result = FALSE;
+    try {
+      if (!empty($params)) {
+        /** @var  OpenAPI\Client\Api\ShipmentsApi $apiInstance */
+        $apiInstance = CRM_Shippo_Connect::shippo('ShipmentsApi');
+        // Request | Shipment details.
+        $async = !empty($params['async']);
+
+        $addressFromRequest = new ShipmentCreateRequestAllOfAddressFrom();
+        $addressFromRequest->setStreet1($params['address_from']['street_address']);
+        if (!empty($params['address_from']['supplemental_address_1'])) {
+          $addressFromRequest->setStreet2($params['address_from']['supplemental_address_1']);
+        }
+
+        $addressFromRequest->setCity($params['address_from']['city']);
+        $addressFromRequest->setState($params['address_from']['state']);
+        $addressFromRequest->setZip($params['address_from']['zip']);
+        $addressFromRequest->setCountry($params['address_from']['country']);
+        $addressFromRequest->setPhone($params['address_from']['phone']);
+        $addressFromRequest->setEmail($params['address_from']['email']);
+        if (!empty($params['address_from']['name'])) {
+          $addressFromRequest->setName($params['address_from']['name']);
+        }
+
+        $addressToRequest = new ShipmentCreateRequestAllOfAddressTo();
+        $addressToRequest->setStreet1($params['address_to']['street_address']);
+        if (!empty($params['address_to']['supplemental_address_1'])) {
+          $addressToRequest->setStreet2($params['address_to']['supplemental_address_1']);
+        }
+        $addressToRequest->setCity($params['address_to']['city']);
+        $addressToRequest->setState($params['address_to']['state']);
+        $addressToRequest->setZip($params['address_to']['zip'] ?? $params['address_to']['postal_code']);
+        $addressToRequest->setCountry($params['address_to']['country']);
+        $addressToRequest->setPhone($params['address_to']['phone']);
+        if (!empty($params['address_to']['name'])) {
+          $addressToRequest->setName($params['address_to']['name']);
+        }
+
+        $parcelRequest = new ShipmentCreateRequestAllOfParcels();
+        $parcelRequest->setHeight($params['parcels']['height']);
+        $parcelRequest->setWidth($params['parcels']['width']);
+        $parcelRequest->setLength($params['parcels']['length']);
+        $parcelRequest->setWeight($params['parcels']['weight']);
+        $parcelRequest->setMassUnit($params['parcels']['mass_unit']);
+        $parcelRequest->setDistanceUnit($params['parcels']['distance_unit']);
+
+        $shipmentCreateRequest = new ShipmentCreateRequest();
+        $shipmentCreateRequest->setAddressFrom($addressFromRequest);
+        $shipmentCreateRequest->setAddressTo($addressToRequest);
+        $shipmentCreateRequest->setParcels([$parcelRequest]);
+        $shipmentCreateRequest->setCustomsDeclaration($params['customs_declaration']);
+        $shipmentCreateRequest->setAsync($async);
+        // String | String used to pick a non-default API version to use.
+        $result = $apiInstance->createShipment($shipmentCreateRequest);
+      }
+    }
+    catch (Exception $e) {
+      echo 'Exception when calling shipment: ', $e->getMessage(), PHP_EOL;
+    }
+    return $result;
+  }
+
+  /**
+   * Create Transaction.
+   *
+   * @param array $params
+   *   Input for transaction.
+   *
+   * @return false|array|Transaction
+   *   Mixed.
+   */
+  public static function transactions(array $params): Transaction|bool|array {
+    /** @var  OpenAPI\Client\Api\TransactionsApi $apiInstance */
+    $result = FALSE;
+    try {
+      if (!empty($params)) {
+        $async = !empty($params['async']);
+
+        /** @var  OpenAPI\Client\Api\TransactionsApi $apiInstance */
+        $apiInstance = CRM_Shippo_Connect::shippo('TransactionsApi');
+        $transactionRequest = new CreateTransactionRequest();
+        $transactionRequest->setRate($params['rate']);
+        $transactionRequest->setLabelFileType($params['label_file_type']);
+        $transactionRequest->setAsync($async);
+        $result = $apiInstance->createTransaction($transactionRequest,
+          self::API_VERSION);
+      }
+    }
+    catch (Exception $e) {
+      echo 'Exception when calling TransactionsApi: ', $e->getMessage(), PHP_EOL;
+    }
+    return $result;
+  }
+
+  /**
+   * Create Transaction.
+   *
+   * @param array $params
+   *   Input for transaction.
+   *
+   * @return false|array|Refund
+   *   Mixed.
+   */
+  public static function refund(array $params): Refund|bool|array {
+    /** @var  OpenAPI\Client\Api\RefundsApi $apiInstance */
+    $result = FALSE;
+    try {
+      if (!empty($params)) {
+        $async = !empty($params['async']);
+
+        /** @var  OpenAPI\Client\Api\RefundsApi $apiInstance */
+        $apiInstance = CRM_Shippo_Connect::shippo('RefundsApi');
+        $refundRequest = new RefundRequestBody();
+        $refundRequest->setTransaction($params['transaction']);
+        $refundRequest->setAsync($async);
+        $result = $apiInstance->createRefund($refundRequest, self::API_VERSION);
+      }
+    }
+    catch (Exception $e) {
+      echo 'Exception when calling RefundsApi: ', $e->getMessage(), PHP_EOL;
+    }
+    return $result;
   }
 
 }
