@@ -6,6 +6,7 @@ use OpenAPI\Client\Model\AddressCreateRequest;
 use OpenAPI\Client\Model\CreateTransactionRequest;
 use OpenAPI\Client\Model\CustomsDeclaration;
 use OpenAPI\Client\Model\CustomsDeclarationCreateRequest;
+use OpenAPI\Client\Model\Refund;
 use OpenAPI\Client\Model\RefundRequestBody;
 use OpenAPI\Client\Model\Shipment;
 use OpenAPI\Client\Model\ShipmentCreateRequest;
@@ -13,6 +14,9 @@ use OpenAPI\Client\Model\ShipmentCreateRequestAllOfAddressFrom;
 use OpenAPI\Client\Model\ShipmentCreateRequestAllOfAddressTo;
 use OpenAPI\Client\Model\ShipmentCreateRequestAllOfParcels;
 use OpenAPI\Client\Model\Transaction;
+use OpenAPI\Client\Model\TrackingStatus;
+use OpenAPI\Client\Model\Track;
+
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -61,6 +65,8 @@ class CRM_Shippo_Connect {
    *
    * @return string|null
    *   Address id.
+   *
+   * @throws Exception
    */
   public static function address(array $params) {
     /** @var  OpenAPI\Client\Api\AddressesApi $apiInstance */
@@ -103,7 +109,7 @@ class CRM_Shippo_Connect {
       $addressID = $result->getObjectId();
     }
     catch (Exception $e) {
-      echo 'createAddress: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling AddressesApi->createAddress: ' . $e->getMessage());
     }
     return $addressID;
   }
@@ -117,7 +123,7 @@ class CRM_Shippo_Connect {
    * @return bool
    *   Is valid.
    *
-   * @throws \OpenAPI\Client\ApiException
+   * @throws \OpenAPI\Client\ApiException|Exception
    */
   public static function validate(string $addressObjectID): bool {
     /** @var  OpenAPI\Client\Api\AddressesApi $apiInstance */
@@ -129,7 +135,7 @@ class CRM_Shippo_Connect {
       }
     }
     catch (Exception $e) {
-      echo 'Exception when calling AddressesApi->validateAddress: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling AddressesApi->validateAddress: ' . $e->getMessage());
     }
     return $result;
   }
@@ -143,7 +149,7 @@ class CRM_Shippo_Connect {
    * @return array
    *   Address.
    *
-   * @throws \OpenAPI\Client\ApiException
+   * @throws \OpenAPI\Client\ApiException|Exception
    */
   public static function getAddress(string $addressObjectID): array {
     /** @var  OpenAPI\Client\Api\AddressesApi $apiInstance */
@@ -165,7 +171,7 @@ class CRM_Shippo_Connect {
       }
     }
     catch (Exception $e) {
-      echo 'Exception when calling AddressesApi->getAddress: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling AddressesApi->getAddress: ' . $e->getMessage());
     }
     return [];
   }
@@ -178,9 +184,12 @@ class CRM_Shippo_Connect {
    *
    * @return false|array|CustomsDeclaration
    *   Mixed.
+   *
+   * @throws Exception
    */
   public static function declarations(array $params): array|bool|CustomsDeclaration {
     $result = FALSE;
+    CRM_Core_Error::debug_var('declarations params', $params);
     try {
       /** @var  OpenAPI\Client\Api\CustomsDeclarationsApi $apiInstance */
       $apiInstance = CRM_Shippo_Connect::shippo('CustomsDeclarationsApi');
@@ -194,7 +203,7 @@ class CRM_Shippo_Connect {
       $result = $apiInstance->createCustomsDeclaration($customsDeclarationRequest, self::API_VERSION);
     }
     catch (Exception $e) {
-      echo 'Exception when calling CustomsDeclarationsApi: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling CustomsDeclarationsApi: ' . $e->getMessage());
     }
     return $result;
   }
@@ -207,6 +216,8 @@ class CRM_Shippo_Connect {
    *
    * @return false|array|Shipment
    *   Mixed return.
+   *
+   * @throws Exception
    */
   public static function shipment(array $params): bool|Shipment|array {
     /** @var  OpenAPI\Client\Api\ShipmentsApi $apiInstance */
@@ -267,7 +278,7 @@ class CRM_Shippo_Connect {
       }
     }
     catch (Exception $e) {
-      echo 'Exception when calling shipment: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling shipment: ' . $e->getMessage());
     }
     return $result;
   }
@@ -280,6 +291,8 @@ class CRM_Shippo_Connect {
    *
    * @return false|array|Transaction
    *   Mixed.
+   *
+   * @throws Exception
    */
   public static function transactions(array $params): Transaction|bool|array {
     /** @var  OpenAPI\Client\Api\TransactionsApi $apiInstance */
@@ -287,7 +300,7 @@ class CRM_Shippo_Connect {
     try {
       if (!empty($params)) {
         $async = !empty($params['async']);
-
+        CRM_Core_Error::debug_var('transactions $params', $params);
         /** @var  OpenAPI\Client\Api\TransactionsApi $apiInstance */
         $apiInstance = CRM_Shippo_Connect::shippo('TransactionsApi');
         $transactionRequest = new CreateTransactionRequest();
@@ -299,7 +312,7 @@ class CRM_Shippo_Connect {
       }
     }
     catch (Exception $e) {
-      echo 'Exception when calling TransactionsApi: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling TransactionsApi: ' . $e->getMessage());
     }
     return $result;
   }
@@ -310,8 +323,10 @@ class CRM_Shippo_Connect {
    * @param array $params
    *   Input for transaction.
    *
-   * @return false|array|Refund
+   * @return false|array|OpenAPI\Client\Model\Refund
    *   Mixed.
+   *
+   * @throws Exception
    */
   public static function refund(array $params): Refund|bool|array {
     /** @var  OpenAPI\Client\Api\RefundsApi $apiInstance */
@@ -329,7 +344,33 @@ class CRM_Shippo_Connect {
       }
     }
     catch (Exception $e) {
-      echo 'Exception when calling RefundsApi: ', $e->getMessage(), PHP_EOL;
+      throw new Exception('Exception when calling RefundsApi: ' . $e->getMessage());
+    }
+    return $result;
+  }
+
+  /**
+   * Track Shipment using tracking id.
+   *
+   * @param array $params
+   *   Input for tracking shipment.
+   *
+   * @return false|array|OpenAPI\Client\Model\Track
+   *   Mixed.
+   *
+   * @throws Exception
+   */
+  public static function track(array $params): Track|bool|array {
+    $result = FALSE;
+    try {
+      if (!empty($params)) {
+        /** @var  OpenAPI\Client\Api\TrackingStatusApi $apiInstance */
+        $apiInstance = CRM_Shippo_Connect::shippo('TrackingStatusApi');
+        $result = $apiInstance->getTrack($params['tracking_id'], $params['provider'], self::API_VERSION);
+      }
+    }
+    catch (Exception $e) {
+      throw new Exception('Exception when calling TrackingStatusApi: ' . $e->getMessage());
     }
     return $result;
   }
