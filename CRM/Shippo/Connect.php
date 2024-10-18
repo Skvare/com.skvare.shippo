@@ -189,7 +189,6 @@ class CRM_Shippo_Connect {
    */
   public static function declarations(array $params): array|bool|CustomsDeclaration {
     $result = FALSE;
-    CRM_Core_Error::debug_var('declarations params', $params);
     try {
       /** @var  OpenAPI\Client\Api\CustomsDeclarationsApi $apiInstance */
       $apiInstance = CRM_Shippo_Connect::shippo('CustomsDeclarationsApi');
@@ -300,7 +299,6 @@ class CRM_Shippo_Connect {
     try {
       if (!empty($params)) {
         $async = !empty($params['async']);
-        CRM_Core_Error::debug_var('transactions $params', $params);
         /** @var  OpenAPI\Client\Api\TransactionsApi $apiInstance */
         $apiInstance = CRM_Shippo_Connect::shippo('TransactionsApi');
         $transactionRequest = new CreateTransactionRequest();
