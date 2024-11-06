@@ -270,7 +270,9 @@ class CRM_Shippo_Connect {
         $shipmentCreateRequest->setAddressFrom($addressFromRequest);
         $shipmentCreateRequest->setAddressTo($addressToRequest);
         $shipmentCreateRequest->setParcels([$parcelRequest]);
-        $shipmentCreateRequest->setCustomsDeclaration($params['customs_declaration']);
+        if (!empty($params['customs_declaration'])) {
+          $shipmentCreateRequest->setCustomsDeclaration($params['customs_declaration']);
+        }
         $shipmentCreateRequest->setAsync($async);
         // String | String used to pick a non-default API version to use.
         $result = $apiInstance->createShipment($shipmentCreateRequest);
